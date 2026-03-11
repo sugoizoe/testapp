@@ -1,0 +1,24 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    container_name: datenow-postgis
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: datenow
+      POSTGRES_USER: datenow_user
+      POSTGRES_PASSWORD: supersecurepassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - datenow_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U datenow_user -d datenow"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  datenow_pgdata:
+
