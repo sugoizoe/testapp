@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
+import '../../features/chat/view/chat_page.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -24,6 +25,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         name: 'register',
         builder: (context, state) => const RegisterScreen(),
       ),
+      GoRoute(
+        path: '/chat',
+        name: 'chat',
+        builder: (context, state) => const ChatPage(),
+      ),
       // İleride: discovery, call, profile vs.
     ],
   );
@@ -34,8 +40,8 @@ class _SplashPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Basit fade-in ile login'e yönlendirme placeholder'ı.
     Future.microtask(() {
+      if (!context.mounted) return;
       final router = GoRouter.of(context);
       router.go('/login');
     });

@@ -19,6 +19,7 @@ class LiveStatusList extends ConsumerWidget {
       height: 90,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
         itemCount: users.length,
         separatorBuilder: (_, __) => const SizedBox(width: 16),
         padding: const EdgeInsets.symmetric(horizontal: 16),

@@ -1,22 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class DiscoveryProfile {
-  final String id;
-  final String fullName;
-  final int age;
-  final double distanceKm;
-  final String imageUrl;
-  final List<String> interests;
-
-  const DiscoveryProfile({
-    required this.id,
-    required this.fullName,
-    required this.age,
-    required this.distanceKm,
-    required this.imageUrl,
-    required this.interests,
-  });
-}
+import '../../data/discovery_repository.dart';
+import '../../domain/discovery_models.dart' show DiscoveryProfile;
 
 class LiveStatusUser {
   final String id;
@@ -65,6 +50,7 @@ final liveStatusListProvider = Provider<List<LiveStatusUser>>((ref) {
   ];
 });
 
+/// Mock liste (API yokken veya hata durumunda yedek).
 final discoveryProfilesProvider = Provider<List<DiscoveryProfile>>((ref) {
   return const [
     DiscoveryProfile(
@@ -114,4 +100,57 @@ final discoveryProfilesProvider = Provider<List<DiscoveryProfile>>((ref) {
     ),
   ];
 });
+
+/// Backend'den yüklenen keşfet listesi ve swipe aksiyonu. API hatasında mock listeye düşer.
+final discoveryStackProvider =
+    StateNotifierProvider<DiscoveryStackNotifier, AsyncValue<List<DiscoveryProfile>>>(
+        (ref) {
+  final repo = ref.read(discoveryRepositoryProvider);
+  final mock = ref.read(discoveryProfilesProvider);
+  return DiscoveryStackNotifier(repo: repo, fallbackList: mock);
+});
+
+class DiscoveryStackNotifier
+    extends StateNotifier<AsyncValue<List<DiscoveryProfile>>> {
+  DiscoveryStackNotifier({
+    required DiscoveryRepository repo,
+    required List<DiscoveryProfile> fallbackList,
+  })  : _repo = repo,
+        _fallbackList = fallbackList,
+        super(const AsyncValue.loading()) {
+    _load();
+  }
+
+  final DiscoveryRepository _repo;
+  final List<DiscoveryProfile> _fallbackList;
+
+  Future<void> _load() async {
+    state = const AsyncValue.loading();
+    try {
+      final list = await _repo.getNearby();
+      state = AsyncValue.data(list.isEmpty ? _fallbackList : list);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+      state = AsyncValue.data(_fallbackList);
+    }
+  }
+
+  /// Yeniden yükle (aşağı çekerek veya boş liste sonrası).
+  void refresh() => _load();
+
+  /// Beğeni (like) veya pas (dislike) gönderir, listeden kaldırır. Eşleşme varsa [SwipeResult] döner.
+  Future<SwipeResult?> swipe(DiscoveryProfile profile, String action) async {
+    final list = state.valueOrNull ?? [];
+    if (list.isEmpty) return null;
+    try {
+      final result = await _repo.swipe(profile.id, action);
+      state = AsyncValue.data(
+        list.where((p) => p.id != profile.id).toList(),
+      );
+      return result;
+    } catch (_) {
+      return null;
+    }
+  }
+}
 

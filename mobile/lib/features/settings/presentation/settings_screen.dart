@@ -172,7 +172,7 @@ class _SectionDivider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Divider(
-      color: Colors.white.withOpacity(0.08),
+      color: Colors.white.withValues(alpha:0.08),
       thickness: 1,
       height: 24,
       indent: 16,

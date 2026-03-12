@@ -10,7 +10,7 @@ CREATE INDEX IF NOT EXISTS idx_user_blocks_blocker_id ON user_blocks(blocker_id)
 CREATE INDEX IF NOT EXISTS idx_user_blocks_blocked_id ON user_blocks(blocked_id);
 
 CREATE TABLE IF NOT EXISTS user_reports (
-    id           UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     reporter_id  UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     reported_id  UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     reason       VARCHAR(32) NOT NULL,

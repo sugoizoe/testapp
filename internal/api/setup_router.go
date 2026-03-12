@@ -69,6 +69,9 @@ func SetupRouter(db *pgxpool.Pool, rtcService *rtc.Service) *gin.Engine {
 		discoveryHandler.RegisterRoutes(discoveryGroup)
 	}
 
+	// WebSocket Endpoint
+	apiGroup.GET("/ws", ws.ServeWS(hub, jwtManager))
+
 	// Örnek healthcheck
 	router.GET("/healthz", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})

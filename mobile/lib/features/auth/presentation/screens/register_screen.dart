@@ -1,12 +1,15 @@
+import 'dart:ui';
+
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-import '../../../../core/permissions/permission_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/validators.dart';
 import '../controllers/auth_controller.dart';
+import '../widgets/aurora_background.dart';
 import '../widgets/custom_text_field.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -29,8 +32,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   String? _gender;
   String? _targetPreference;
 
-  final _permissionService = PermissionService();
-
   @override
   void dispose() {
     _pageController.dispose();
@@ -48,11 +49,22 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       (previous, next) {
         next.whenOrNull(
           error: (err, _) {
+            String message = err.toString();
+            if (err is DioException) {
+              final data = err.response?.data;
+              if (data is Map) {
+                message = data['error']?.toString() ??
+                    data['details']?.toString() ??
+                    message;
+              } else if (data != null) {
+                message = data.toString();
+              }
+            }
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(err.toString()),
+                content: Text(message),
                 behavior: SnackBarBehavior.floating,
-                backgroundColor: AppColors.danger.withOpacity(0.95),
+                backgroundColor: AppColors.danger.withValues(alpha:0.95),
               ),
             );
           },
@@ -63,68 +75,104 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final state = ref.watch(authControllerProvider);
     final isLoading = state.isLoading;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Kayıt Ol'),
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            children: [
-              _buildStepIndicator(),
-              const SizedBox(height: 16),
-              Expanded(
-                child: PageView(
-                  controller: _pageController,
-                  physics: const NeverScrollableScrollPhysics(),
-                  children: [
-                    _buildStep1(),
-                    _buildStep2(),
-                    _buildStep3(),
-                    _buildStep4(),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  if (_currentStep > 0)
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: isLoading ? null : _prevStep,
-                        child: const Text('Geri'),
+    return AuroraBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          title: const Text('Kayıt Ol'),
+        ),
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 620),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha:0.03),
+                        border: Border.all(color: Colors.white.withValues(alpha:0.08)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha:0.35),
+                            blurRadius: 24,
+                            offset: const Offset(0, 12),
+                          ),
+                        ],
+                      ),
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        children: [
+                          _buildStepIndicator(),
+                          const SizedBox(height: 16),
+                          Expanded(
+                            child: PageView(
+                              controller: _pageController,
+                              physics: const NeverScrollableScrollPhysics(),
+                              children: [
+                                _buildStep1(),
+                                _buildStep2(),
+                                _buildStep3(),
+                                _buildStep4(),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            children: [
+                              if (_currentStep > 0)
+                                Expanded(
+                                  child: OutlinedButton(
+                                    onPressed: isLoading ? null : _prevStep,
+                                    child: const Text('Geri'),
+                                  ),
+                                ),
+                              if (_currentStep > 0) const SizedBox(width: 12),
+                              Expanded(
+                                child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(vertical: 14),
+                                    backgroundColor: const Color(0xFF7C3AED),
+                                    foregroundColor: Colors.white,
+                                  ),
+                                  onPressed: isLoading
+                                      ? null
+                                      : () async {
+                                          if (_currentStep < 3) {
+                                            if (_validateCurrentStep(context)) {
+                                              _nextStep();
+                                            }
+                                          } else {
+                                            await _submit(context);
+                                          }
+                                        },
+                                  child: isLoading
+                                      ? const SizedBox(
+                                          height: 20,
+                                          width: 20,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            valueColor:
+                                                AlwaysStoppedAnimation(Colors.white),
+                                          ),
+                                        )
+                                      : Text(_currentStep == 3 ? 'Kayıt Ol' : 'İleri'),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
-                  if (_currentStep > 0) const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: isLoading
-                          ? null
-                          : () async {
-                              if (_currentStep < 3) {
-                                if (_validateCurrentStep(context)) {
-                                  _nextStep();
-                                }
-                              } else {
-                                await _submit(context);
-                              }
-                            },
-                      child: isLoading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation(Colors.white),
-                              ),
-                            )
-                          : Text(_currentStep == 3 ? 'Kayıt Ol' : 'İleri'),
-                    ),
                   ),
-                ],
+                ),
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -143,7 +191,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         } else if (isActive) {
           color = AppColors.accentPurple;
         } else {
-          color = AppColors.softGrey.withOpacity(0.4);
+          color = AppColors.softGrey.withValues(alpha:0.4);
         }
         return Expanded(
           child: Container(
@@ -161,6 +209,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   Widget _buildStep1() {
     return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -196,6 +245,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   Widget _buildStep2() {
     return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -256,6 +306,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   Widget _buildStep3() {
     return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -518,4 +569,3 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     }
   }
 }
-

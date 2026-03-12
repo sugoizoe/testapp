@@ -5,7 +5,7 @@ ALTER TABLE users
     ADD COLUMN IF NOT EXISTS last_call_reset_date TIMESTAMPTZ;
 
 CREATE TABLE IF NOT EXISTS subscriptions (
-    id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id         UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     provider        VARCHAR(32) NOT NULL,  -- 'apple' veya 'google'
     receipt_id      TEXT NOT NULL,
@@ -22,7 +22,7 @@ CREATE INDEX IF NOT EXISTS idx_subscriptions_user_id ON subscriptions(user_id);
 CREATE INDEX IF NOT EXISTS idx_subscriptions_provider_receipt ON subscriptions(provider, receipt_id);
 
 CREATE TABLE IF NOT EXISTS messages (
-    id           UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     match_id     UUID NOT NULL REFERENCES matches(id) ON DELETE CASCADE,
     sender_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     message_type VARCHAR(32) NOT NULL,

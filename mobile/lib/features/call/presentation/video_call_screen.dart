@@ -89,7 +89,7 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen>
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.4),
+                    color: Colors.black.withValues(alpha:0.4),
                     borderRadius: BorderRadius.circular(999),
                     border: Border.all(
                       color: isLastMinute
@@ -174,7 +174,7 @@ class _VideoCallScreenState extends ConsumerState<VideoCallScreen>
           if (state.ended)
             Positioned.fill(
               child: Container(
-                color: Colors.black.withOpacity(0.8),
+                color: Colors.black.withValues(alpha:0.8),
                 child: Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -236,10 +236,10 @@ class _ControlBar extends StatelessWidget {
           height: 90,
           padding: const EdgeInsets.symmetric(horizontal: 32),
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.5),
+            color: Colors.black.withValues(alpha:0.5),
             border: Border(
               top: BorderSide(
-                color: Colors.white.withOpacity(0.08),
+                color: Colors.white.withValues(alpha:0.08),
               ),
             ),
           ),

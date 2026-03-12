@@ -1,4 +1,3 @@
-import 'package:intl/intl.dart';
 
 bool isValidEmail(String value) {
   final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
@@ -16,7 +15,7 @@ bool isAtLeast18YearsOld(DateTime date) {
 }
 
 String formatBirthDate(DateTime date) {
-  final formatter = DateFormat('yyyy-MM-dd');
-  return formatter.format(date);
+  // Go json.Unmarshal into time.Time requires RFC3339 (ISO-8601) format.
+  return date.toUtc().toIso8601String();
 }
 

@@ -27,10 +27,10 @@ class PricingCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final borderColor =
-        selected ? AppColors.accentPurpleSoft : Colors.white.withOpacity(0.12);
+        selected ? AppColors.accentPurpleSoft : Colors.white.withValues(alpha:0.12);
     final bgColor = selected
-        ? AppColors.deepCharcoal.withOpacity(0.9)
-        : AppColors.darkBackground.withOpacity(0.7);
+        ? AppColors.deepCharcoal.withValues(alpha:0.9)
+        : AppColors.darkBackground.withValues(alpha:0.7);
 
     return InkWell(
       onTap: onTap,

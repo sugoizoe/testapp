@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -5,6 +6,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../controllers/auth_controller.dart';
+import '../widgets/aurora_background.dart';
 import '../widgets/custom_text_field.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -38,7 +40,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               SnackBar(
                 content: Text(err.toString()),
                 behavior: SnackBarBehavior.floating,
-                backgroundColor: AppColors.danger.withOpacity(0.95),
+                backgroundColor: AppColors.danger.withValues(alpha:0.95),
               ),
             );
           },
@@ -49,127 +51,202 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final state = ref.watch(authControllerProvider);
     final isLoading = state.isLoading;
 
-    return Scaffold(
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 250),
-        child: SafeArea(
-          key: const ValueKey('login'),
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 16),
-                Text(
-                  'Datenow\'a Hoş Geldin',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
+    return AuroraBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        resizeToAvoidBottomInset: true,
+        body: SafeArea(
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 540),
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha:0.03),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha:0.08),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha:0.35),
+                            blurRadius: 24,
+                            offset: const Offset(0, 12),
+                          ),
+                        ],
                       ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Sohbet değil, gerçek buluşma odaklı bir deneyim.',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.softGrey,
-                      ),
-                ),
-                const SizedBox(height: 32),
-                CustomTextField(
-                  label: 'E-posta',
-                  hint: 'ornek@mail.com',
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                ),
-                const SizedBox(height: 16),
-                CustomTextField(
-                  label: 'Şifre',
-                  hint: 'En az 8 karakter',
-                  controller: _passwordController,
-                  obscureText: true,
-                ),
-                const SizedBox(height: 8),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.qr_code_scanner_rounded),
-                        color: AppColors.softGrey,
-                        onPressed: isLoading ? null : () => _openQrLogin(context),
-                      ),
-                      TextButton(
-                        onPressed:
-                            isLoading ? null : () => _openForgotPasswordSheet(context),
-                        child: const Text('Şifremi Unuttum'),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: isLoading ? null : () => _onLoginPressed(context),
-                    child: isLoading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation(Colors.white),
+                      padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      'Datenow\'a Hoş Geldin',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .headlineMedium
+                                          ?.copyWith(fontWeight: FontWeight.bold),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      'Gerçek buluşma odaklı deneyim. Şimdi giriş yap.',
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium
+                                          ?.copyWith(color: AppColors.softGrey),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Container(
+                                height: 38,
+                                width: 38,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: const LinearGradient(
+                                    colors: [Color(0xFF7C3AED), Color(0xFFFF5E8A)],
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: const Color(0xFF7C3AED).withValues(alpha:0.35),
+                                      blurRadius: 16,
+                                    ),
+                                  ],
+                                ),
+                                child: const Icon(Icons.flash_on, color: Colors.white),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 24),
+                          CustomTextField(
+                            label: 'E-posta',
+                            hint: 'ornek@mail.com',
+                            controller: _emailController,
+                            keyboardType: TextInputType.emailAddress,
+                          ),
+                          const SizedBox(height: 16),
+                          CustomTextField(
+                            label: 'Şifre',
+                            hint: 'En az 8 karakter',
+                            controller: _passwordController,
+                            obscureText: true,
+                          ),
+                          const SizedBox(height: 8),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.qr_code_scanner_rounded),
+                                  color: AppColors.softGrey,
+                                  onPressed: isLoading ? null : () => _openQrLogin(context),
+                                ),
+                                TextButton(
+                                  onPressed: isLoading
+                                      ? null
+                                      : () => _openForgotPasswordSheet(context),
+                                  child: const Text('Şifremi Unuttum'),
+                                ),
+                              ],
                             ),
-                          )
-                        : const Text('Giriş Yap'),
+                          ),
+                          const SizedBox(height: 24),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                backgroundColor: const Color(0xFF7C3AED),
+                                foregroundColor: Colors.white,
+                              ),
+                              onPressed: isLoading ? null : () => _onLoginPressed(context),
+                              child: isLoading
+                                  ? const SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor:
+                                            AlwaysStoppedAnimation(Colors.white),
+                                      ),
+                                    )
+                                  : const Text('Giriş Yap'),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Divider(
+                                  color: AppColors.softGrey.withValues(alpha:0.3),
+                                ),
+                              ),
+                              const Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 12),
+                                child: Text('veya'),
+                              ),
+                              Expanded(
+                                child: Divider(
+                                  color: AppColors.softGrey.withValues(alpha:0.3),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: isLoading ? null : () {},
+                                  icon: const Icon(Icons.g_mobiledata, size: 28),
+                                  label: const Text('Google ile'),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: isLoading ? null : () {},
+                                  icon: const Icon(Icons.apple, size: 24),
+                                  label: const Text('Apple ile'),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 18),
+                          Align(
+                            alignment: Alignment.center,
+                            child: TextButton(
+                              onPressed: () => context.go('/register'),
+                              child: const Text('Hesabın yok mu? Kayıt Ol'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-                const SizedBox(height: 24),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Divider(
-                        color: AppColors.softGrey.withOpacity(0.3),
-                      ),
-                    ),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 12),
-                      child: Text('veya'),
-                    ),
-                    Expanded(
-                      child: Divider(
-                        color: AppColors.softGrey.withOpacity(0.3),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: isLoading ? null : () {},
-                        icon: const Icon(Icons.g_mobiledata, size: 28),
-                        label: const Text('Google ile'),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: isLoading ? null : () {},
-                        icon: const Icon(Icons.apple, size: 24),
-                        label: const Text('Apple ile'),
-                      ),
-                    ),
-                  ],
-                ),
-                const Spacer(),
-                Center(
-                  child: TextButton(
-                    onPressed: () => context.go('/register'),
-                    child: const Text('Hesabın yok mu? Kayıt Ol'),
-                  ),
-                ),
-              ],
+              ),
+            ),
             ),
           ),
         ),

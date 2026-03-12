@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../auth/domain/validators.dart';
 import '../../data/auth_repository.dart';
+import '../../../../core/providers/global_providers.dart';
 
 final authControllerProvider =
     AutoDisposeAsyncNotifierProvider<AuthController, void>(
@@ -29,8 +30,9 @@ class AuthController extends AutoDisposeAsyncNotifier<void> {
 
     try {
       await repo.login(email: email, password: password);
+      ref.read(authProvider.notifier).setLoggedIn();
       state = const AsyncData(null);
-      router.go('/discovery'); // TODO: gerçek ana sayfa rotası
+      router.go('/home');
     } catch (e, st) {
       state = AsyncError(e, st);
       rethrow;
@@ -68,12 +70,12 @@ class AuthController extends AutoDisposeAsyncNotifier<void> {
         gender: gender,
         targetGenderPreference: targetGenderPreference,
       );
+      ref.read(authProvider.notifier).setLoggedIn();
       state = const AsyncData(null);
-      router.go('/discovery');
+      router.go('/home');
     } catch (e, st) {
       state = AsyncError(e, st);
       rethrow;
     }
   }
 }
-

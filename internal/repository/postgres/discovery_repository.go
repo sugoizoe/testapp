@@ -39,7 +39,7 @@ func (r *DiscoveryRepository) GetNearbyProfiles(ctx context.Context, userID stri
 			COALESCE(p_other.bio, ''),
 			COALESCE(p_other.city, ''),
 			COALESCE(p_other.country, ''),
-			ST_Distance(p_self.location, p_other.location) / 1000.0 AS distance_km,
+			haversine_distance_km(p_self.lat, p_self.lon, p_other.lat, p_other.lon) AS distance_km,
 			p_other.attributes
 		FROM profiles AS p_self
 		JOIN profiles AS p_other
@@ -54,8 +54,8 @@ func (r *DiscoveryRepository) GetNearbyProfiles(ctx context.Context, userID stri
 			AND ub2.blocked_id = p_self.user_id
 		WHERE
 			p_self.user_id = $1
-			AND p_self.location IS NOT NULL
-			AND p_other.location IS NOT NULL
+			AND p_self.lat IS NOT NULL
+			AND p_other.lat IS NOT NULL
 			AND ub1.blocker_id IS NULL
 			AND ub2.blocker_id IS NULL
 			AND u_other.is_shadowbanned = FALSE
@@ -83,7 +83,7 @@ func (r *DiscoveryRepository) GetNearbyProfiles(ctx context.Context, userID stri
 			COALESCE(p_other.bio, ''),
 			COALESCE(p_other.city, ''),
 			COALESCE(p_other.country, ''),
-			ST_Distance(p_self.location, p_other.location) / 1000.0 AS distance_km,
+			haversine_distance_km(p_self.lat, p_self.lon, p_other.lat, p_other.lon) AS distance_km,
 			p_other.attributes
 		FROM profiles AS p_self
 		JOIN profiles AS p_other
@@ -98,16 +98,12 @@ func (r *DiscoveryRepository) GetNearbyProfiles(ctx context.Context, userID stri
 			AND ub2.blocked_id = p_self.user_id
 		WHERE
 			p_self.user_id = $1
-			AND p_self.location IS NOT NULL
-			AND p_other.location IS NOT NULL
+			AND p_self.lat IS NOT NULL
+			AND p_other.lat IS NOT NULL
 			AND ub1.blocker_id IS NULL
 			AND ub2.blocker_id IS NULL
 			AND u_other.is_shadowbanned = FALSE
-			AND ST_DWithin(
-				p_self.location,
-				p_other.location,
-				$2 * 1000.0
-			)
+			AND haversine_distance_km(p_self.lat, p_self.lon, p_other.lat, p_other.lon) <= $2
 			AND (
 				p_self.target_gender_preference = 'any'
 				OR (p_self.target_gender_preference = 'both' AND p_other.gender IN ('male', 'female'))

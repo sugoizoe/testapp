@@ -44,7 +44,7 @@ class PaywallScreen extends ConsumerWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.black.withOpacity(0.5),
+                    Colors.black.withValues(alpha:0.5),
                     AppColors.darkBackground,
                   ],
                 ),
@@ -56,8 +56,9 @@ class PaywallScreen extends ConsumerWidget {
               children: [
                 Expanded(
                   child: SingleChildScrollView(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 24, vertical: 24),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -130,12 +131,12 @@ class PaywallScreen extends ConsumerWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                   decoration: BoxDecoration(
-                    color: AppColors.deepCharcoal.withOpacity(0.98),
+                    color: AppColors.deepCharcoal.withValues(alpha:0.98),
                     borderRadius:
                         const BorderRadius.vertical(top: Radius.circular(24)),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.6),
+                        color: Colors.black.withValues(alpha:0.6),
                         offset: const Offset(0, -4),
                         blurRadius: 16,
                       ),
@@ -266,7 +267,7 @@ class _WaveBackgroundPainter extends CustomPainter {
     final paint = Paint()
       ..shader = LinearGradient(
         colors: [
-          AppColors.accentPurple.withOpacity(0.25),
+          AppColors.accentPurple.withValues(alpha:0.25),
           Colors.transparent,
         ],
         begin: Alignment.topLeft,

@@ -72,12 +72,13 @@ func readPump(c *Client, conn *websocket.Conn) {
 	})
 
 	for {
-		_, _, err := conn.ReadMessage()
+		_, msg, err := conn.ReadMessage()
 		if err != nil {
 			break
 		}
-		// Şimdilik gelen mesajları server kullanmıyor;
-		// ileride "typing", "call-state" gibi sinyaller için genişletilebilir.
+		// Şimdilik gelen mesajları sunucu eko olarak geri gönderiyor (test amaçlı)
+		// İleride "typing", "call-state" gibi sinyaller için genişletilebilir.
+		c.Hub.SendToUser(c.UserID, msg)
 	}
 }
 

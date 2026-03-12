@@ -100,7 +100,7 @@ class SettingsListTile extends StatelessWidget {
                           ),
                           margin: const EdgeInsets.only(left: 6),
                           decoration: BoxDecoration(
-                            color: AppColors.accentPurpleSoft.withOpacity(0.2),
+                            color: AppColors.accentPurpleSoft.withValues(alpha:0.2),
                             borderRadius: BorderRadius.circular(999),
                             border: Border.all(
                               color: AppColors.accentPurpleSoft,

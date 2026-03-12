@@ -1,3 +1,5 @@
+import org.gradle.api.tasks.compile.JavaCompile
+
 allprojects {
     repositories {
         google()
@@ -17,6 +19,22 @@ subprojects {
 }
 subprojects {
     project.evaluationDependsOn(":app")
+}
+
+// Eklentilerdeki Java 8 derlemesini 17 yap ve "source value 8 is obsolete" uyarısını kapat
+subprojects {
+    val configureJava = {
+        tasks.withType<JavaCompile>().configureEach {
+            sourceCompatibility = JavaVersion.VERSION_17.toString()
+            targetCompatibility = JavaVersion.VERSION_17.toString()
+            options.compilerArgs.add("-Xlint:-options")
+        }
+    }
+    if (project.state.executed) {
+        configureJava()
+    } else {
+        project.afterEvaluate { configureJava() }
+    }
 }
 
 tasks.register<Delete>("clean") {

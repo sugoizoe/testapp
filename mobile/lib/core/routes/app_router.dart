@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -12,6 +14,8 @@ import '../../features/match/presentation/screens/match_animation_screen.dart';
 import '../../features/premium/presentation/paywall_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
+import '../../features/chat/view/messages_list_screen.dart';
+import '../../features/chat/view/chat_detail_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final auth = ref.watch(authProvider);
@@ -77,6 +81,13 @@ final routerProvider = Provider<GoRouter>((ref) {
             ),
           ),
           GoRoute(
+            path: '/messages',
+            name: 'messages',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: MessagesListScreen(),
+            ),
+          ),
+          GoRoute(
             path: '/settings',
             name: 'settings',
             pageBuilder: (context, state) => const NoTransitionPage(
@@ -84,6 +95,38 @@ final routerProvider = Provider<GoRouter>((ref) {
             ),
           ),
         ],
+      ),
+      GoRoute(
+        path: '/chat',
+        name: 'chat',
+        pageBuilder: (context, state) {
+          final extra = state.extra as Map<String, String>?;
+          return CustomTransitionPage(
+            child: ChatDetailScreen(
+              name: extra?['name'] ?? '',
+              avatarUrl: extra?['avatarUrl'] ?? '',
+            ),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+              return FadeTransition(
+                opacity: CurvedAnimation(
+                  parent: animation,
+                  curve: Curves.easeInOut,
+                ),
+                child: SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(0, 0.08),
+                    end: Offset.zero,
+                  ).animate(CurvedAnimation(
+                    parent: animation,
+                    curve: Curves.easeOutCubic,
+                  )),
+                  child: child,
+                ),
+              );
+            },
+          );
+        },
       ),
       GoRoute(
         path: '/call/:matchId',
@@ -160,43 +203,57 @@ class _ShellScaffold extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final router = GoRouter.of(context);
     final location = GoRouterState.of(context).uri.path;
 
     int index;
     if (location.startsWith('/profile')) {
       index = 1;
-    } else if (location.startsWith('/settings')) {
+    } else if (location.startsWith('/messages')) {
       index = 2;
+    } else if (location.startsWith('/settings')) {
+      index = 3;
     } else {
       index = 0;
     }
 
     return Scaffold(
       backgroundColor: AppColors.darkBackground,
-      body: child,
-      bottomNavigationBar: _BottomNavBar(
-        currentIndex: index,
-        onTap: (i) {
-          switch (i) {
-            case 0:
-              router.go('/home');
-              break;
-            case 1:
-              router.go('/profile');
-              break;
-            case 2:
-              router.go('/settings');
-              break;
-          }
-        },
+      body: Stack(
+        children: [
+          child,
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: _FloatingNavBar(
+                currentIndex: index,
+                onTap: (i) {
+                  switch (i) {
+                    case 0:
+                      GoRouter.of(context).go('/home');
+                      break;
+                    case 1:
+                      GoRouter.of(context).go('/profile');
+                      break;
+                    case 2:
+                      GoRouter.of(context).go('/messages');
+                      break;
+                    case 3:
+                      GoRouter.of(context).go('/settings');
+                      break;
+                  }
+                },
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _BottomNavBar extends StatelessWidget {
-  const _BottomNavBar({
+class _FloatingNavBar extends StatelessWidget {
+  const _FloatingNavBar({
     required this.currentIndex,
     required this.onTap,
   });
@@ -206,76 +263,93 @@ class _BottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 64,
-      decoration: BoxDecoration(
-        color: AppColors.deepCharcoal.withOpacity(0.95),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        border: Border(
-          top: BorderSide(
-            color: Colors.white.withOpacity(0.06),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(999),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+        child: Container(
+          height: 64,
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha:0.06),
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(
+              color: Colors.white.withValues(alpha:0.16),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha:0.55),
+                offset: const Offset(0, 18),
+                blurRadius: 40,
+                spreadRadius: -12,
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _FloatingNavIcon(
+                icon: Icons.radar_rounded,
+                active: currentIndex == 0,
+                onTap: () => onTap(0),
+              ),
+              _FloatingNavIcon(
+                icon: Icons.person_outline,
+                active: currentIndex == 1,
+                onTap: () => onTap(1),
+              ),
+              _FloatingNavIcon(
+                icon: Icons.chat_bubble_rounded,
+                active: currentIndex == 2,
+                onTap: () => onTap(2),
+              ),
+              _FloatingNavIcon(
+                icon: Icons.settings_outlined,
+                active: currentIndex == 3,
+                onTap: () => onTap(3),
+              ),
+            ],
           ),
         ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          _NavItem(
-            icon: Icons.radar_rounded,
-            label: 'Keşfet',
-            selected: currentIndex == 0,
-            onTap: () => onTap(0),
-          ),
-          _NavItem(
-            icon: Icons.person_outline_rounded,
-            label: 'Profil',
-            selected: currentIndex == 1,
-            onTap: () => onTap(1),
-          ),
-          _NavItem(
-            icon: Icons.settings_outlined,
-            label: 'Ayarlar',
-            selected: currentIndex == 2,
-            onTap: () => onTap(2),
-          ),
-        ],
       ),
     );
   }
 }
 
-class _NavItem extends StatelessWidget {
-  const _NavItem({
+class _FloatingNavIcon extends StatelessWidget {
+  const _FloatingNavIcon({
     required this.icon,
-    required this.label,
-    required this.selected,
+    required this.active,
     required this.onTap,
   });
 
   final IconData icon;
-  final String label;
-  final bool selected;
+  final bool active;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final color =
-        selected ? AppColors.accentPurpleSoft : AppColors.softGrey;
-    return InkWell(
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: onTap,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: color),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: TextStyle(
-              color: color,
-              fontSize: 11,
-            ),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeInOut,
+        padding: EdgeInsets.all(active ? 10 : 8),
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color:
+              active ? Colors.white.withValues(alpha:0.12) : Colors.transparent,
+        ),
+        child: AnimatedScale(
+          scale: active ? 1.15 : 1.0,
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeInOut,
+          child: Icon(
+            icon,
+            color:
+                active ? AppColors.accentPurpleSoft : AppColors.softGrey,
           ),
-        ],
+        ),
       ),
     );
   }

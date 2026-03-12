@@ -27,10 +27,7 @@ func (s *LocationService) UpdateLocation(ctx context.Context, userID string, lat
 	)
 
 	err := s.db.QueryRow(ctx, `
-		SELECT
-			CASE WHEN location IS NULL THEN NULL ELSE ST_Y(location::geometry) END AS lat,
-			CASE WHEN location IS NULL THEN NULL ELSE ST_X(location::geometry) END AS lon,
-			location_updated_at
+		SELECT lat, lon, location_updated_at
 		FROM profiles
 		WHERE user_id = $1
 	`, userID).Scan(&prevLat, &prevLon, &prevTime)
@@ -44,10 +41,10 @@ func (s *LocationService) UpdateLocation(ctx context.Context, userID string, lat
 	if prevLat == nil || prevLon == nil || prevTime == nil {
 		_, err := s.db.Exec(ctx, `
 			UPDATE profiles
-			SET location = ST_SetSRID(ST_MakePoint($2, $3), 4326)::geography,
+			SET lat = $2, lon = $3,
 			    location_updated_at = $4
 			WHERE user_id = $1
-		`, userID, lon, lat, now)
+		`, userID, lat, lon, now)
 		if err != nil {
 			return fmt.Errorf("update initial location: %w", err)
 		}
@@ -61,18 +58,15 @@ func (s *LocationService) UpdateLocation(ctx context.Context, userID string, lat
 	)
 	err = s.db.QueryRow(ctx, `
 		WITH prev AS (
-			SELECT location, location_updated_at
+			SELECT lat, lon, location_updated_at
 			FROM profiles
 			WHERE user_id = $1
 		)
 		SELECT
-			ST_Distance(
-				prev.location,
-				ST_SetSRID(ST_MakePoint($2, $3), 4326)::geography
-			) / 1000.0 AS dist_km,
+			haversine_distance_km(prev.lat, prev.lon, $2, $3) AS dist_km,
 			EXTRACT(EPOCH FROM ($4 - prev.location_updated_at)) / 3600.0 AS hours
 		FROM prev
-	`, userID, lon, lat, now).Scan(&distKm, &hours)
+	`, userID, lat, lon, now).Scan(&distKm, &hours)
 	if err != nil {
 		return fmt.Errorf("compute distance/time: %w", err)
 	}
@@ -99,10 +93,10 @@ func (s *LocationService) UpdateLocation(ctx context.Context, userID string, lat
 	// Güvenli hız: konumu güncelle
 	_, err = s.db.Exec(ctx, `
 		UPDATE profiles
-		SET location = ST_SetSRID(ST_MakePoint($2, $3), 4326)::geography,
+		SET lat = $2, lon = $3,
 		    location_updated_at = $4
 		WHERE user_id = $1
-	`, userID, lon, lat, now)
+	`, userID, lat, lon, now)
 	if err != nil {
 		return fmt.Errorf("update location: %w", err)
 	}

@@ -28,12 +28,10 @@ func (r *StatusRepository) CreateStatus(ctx context.Context, userID, content str
 
 	var id string
 	err := r.db.QueryRow(ctx, `
-		INSERT INTO statuses (user_id, content, location, expires_at)
-		VALUES ($1, $2,
-		        ST_SetSRID(ST_MakePoint($3, $4), 4326)::geography,
-		        $5)
+		INSERT INTO statuses (user_id, content, lat, lon, expires_at)
+		VALUES ($1, $2, $3, $4, $5)
 		RETURNING id
-	`, userID, content, lon, lat, expiresAt).Scan(&id)
+	`, userID, content, lat, lon, expiresAt).Scan(&id)
 	if err != nil {
 		return "", fmt.Errorf("insert status: %w", err)
 	}
@@ -56,15 +54,12 @@ func (r *StatusRepository) GetNearbyActiveStatuses(ctx context.Context, viewerID
 			s.id,
 			s.user_id,
 			s.content,
-			ST_Y(ST_AsText(s.location::geometry)) AS lat,
-			ST_X(ST_AsText(s.location::geometry)) AS lon,
+			s.lat,
+			s.lon,
 			s.expires_at,
 			s.is_active,
 			s.created_at,
-			ST_Distance(
-				s.location,
-				ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography
-			) / 1000.0 AS distance_km
+			haversine_distance_km(s.lat, s.lon, $1, $2) AS distance_km
 		FROM statuses s
 		LEFT JOIN user_blocks ub1
 			ON ub1.blocker_id = s.user_id
@@ -77,14 +72,10 @@ func (r *StatusRepository) GetNearbyActiveStatuses(ctx context.Context, viewerID
 			AND s.expires_at > NOW()
 			AND ub1.blocker_id IS NULL
 			AND ub2.blocker_id IS NULL
-			AND ST_DWithin(
-				s.location,
-				ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography,
-				$3 * 1000.0
-			)
+			AND haversine_distance_km(s.lat, s.lon, $1, $2) <= $3
 		ORDER BY distance_km ASC, s.created_at DESC
 		LIMIT $4
-	`, lon, lat, radiusKm, limit, viewerID)
+	`, lat, lon, radiusKm, limit, viewerID)
 	if err != nil {
 		return nil, fmt.Errorf("query nearby statuses: %w", err)
 	}

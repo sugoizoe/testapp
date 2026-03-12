@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io' show Platform;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:web_socket_channel/status.dart' as ws_status;
@@ -107,11 +109,15 @@ class WebSocketClient {
   }
 }
 
-const String kBaseWsUrl = String.fromEnvironment(
-  'WS_BASE_URL',
-  // Örn: ws://10.0.2.2:8080/ws
-  defaultValue: 'ws://10.0.2.2:8080/ws',
-);
+String get _defaultWsUrl {
+  if (kIsWeb) return 'ws://localhost:8080/ws';
+  if (Platform.isAndroid) return 'ws://10.0.2.2:8080/ws';
+  return 'ws://localhost:8080/ws';
+}
+
+final String kBaseWsUrl = const String.fromEnvironment('WS_BASE_URL') != ''
+    ? const String.fromEnvironment('WS_BASE_URL')
+    : _defaultWsUrl;
 
 final webSocketClientProvider = Provider<WebSocketClient>((ref) {
   final storage = ref.read(tokenStorageProvider);

@@ -46,7 +46,14 @@ class TwoFactorSetupScreen extends ConsumerWidget {
                 data: otpauthUrl,
                 version: QrVersions.auto,
                 size: 180,
-                foregroundColor: Colors.white,
+                eyeStyle: const QrEyeStyle(
+                  eyeShape: QrEyeShape.square,
+                  color: Colors.white,
+                ),
+                dataModuleStyle: const QrDataModuleStyle(
+                  dataModuleShape: QrDataModuleShape.square,
+                  color: Colors.white,
+                ),
               ),
             ),
             const SizedBox(height: 16),

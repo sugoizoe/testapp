@@ -33,7 +33,7 @@ class MatchAnimationScreen extends StatelessWidget {
           // Hafif karartma
           Positioned.fill(
             child: Container(
-              color: Colors.black.withOpacity(0.35),
+              color: Colors.black.withValues(alpha:0.35),
             ),
           ),
           SafeArea(

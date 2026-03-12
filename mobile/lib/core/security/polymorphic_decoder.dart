@@ -19,10 +19,12 @@ class PolymorphicDecoder {
   /// Backend tarafındaki algoritma ile senkronize olacak şekilde
   /// anahtar çözümleme mantığı burada uygulanmalıdır.
   Map<String, dynamic> decodeRaw(Map<String, dynamic> obfuscated) {
-    // Şu an için pas-through; backend algoritması netleştiğinde
-    // burada seed + timestamp tabanlı key mapping uygulanacak.
+    // İleride seed + _nowProvider() ile key türetme kullanılacak.
+    ignoreForNow(_nowProvider);
     return obfuscated;
   }
+
+  static void ignoreForNow(int Function() fn) => fn();
 
   /// Genel amaçlı decode + model mapping helper'ı.
   T decodeToModel<T>(

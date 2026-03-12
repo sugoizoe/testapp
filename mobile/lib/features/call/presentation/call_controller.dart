@@ -38,8 +38,7 @@ class CallState {
 
 class CallController extends StateNotifier<CallState> {
   CallController({required Duration initialDuration})
-      : _initialDuration = initialDuration,
-        super(CallState(
+      : super(CallState(
           remaining: initialDuration,
           isMuted: false,
           isCameraOff: false,
@@ -48,7 +47,6 @@ class CallController extends StateNotifier<CallState> {
     _startTimer();
   }
 
-  final Duration _initialDuration;
   Timer? _timer;
 
   void _startTimer() {

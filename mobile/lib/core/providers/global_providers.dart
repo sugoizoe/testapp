@@ -57,11 +57,19 @@ class AuthController extends StateNotifier<AuthState> {
     );
   }
 
+  void setLoggedIn() {
+    state = state.copyWith(
+      isAuthenticated: true,
+      isLoading: false,
+    );
+  }
+
   void setLoggedOut() {
     state = state.copyWith(
       isAuthenticated: false,
       isPremium: false,
       isShadowbanned: false,
+      isLoading: false,
     );
   }
 
@@ -83,8 +91,6 @@ final dioClientProvider = Provider<Dio>((ref) {
   return ref.read(dioProvider);
 });
 
-final authProvider =
-    StateNotifierProvider<AuthController, AuthState>((ref) {
+final authProvider = StateNotifierProvider<AuthController, AuthState>((ref) {
   return AuthController(ref);
 });
-

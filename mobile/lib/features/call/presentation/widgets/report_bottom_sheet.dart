@@ -10,7 +10,7 @@ class ReportBottomSheet extends StatelessWidget {
     final theme = Theme.of(context);
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.deepCharcoal.withOpacity(0.98),
+        color: AppColors.deepCharcoal.withValues(alpha:0.98),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
@@ -24,7 +24,7 @@ class ReportBottomSheet extends StatelessWidget {
               height: 4,
               margin: const EdgeInsets.only(bottom: 16),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha:0.2),
                 borderRadius: BorderRadius.circular(999),
               ),
             ),
